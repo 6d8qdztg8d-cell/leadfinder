@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lead Finder — KI Web-Analyse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="layout">
+
+    <!-- ── SIDEBAR ────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-mark">LF</div>
+        <div class="logo-text">
+          <span class="logo-title">LeadFinder</span>
+          <span class="logo-sub">Web-Analyse</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-page="leads">
+          <span class="nav-dot"></span>
+          <span class="nav-label">LEADS</span>
+          <span class="nav-badge" id="badge-pending">0</span>
+        </button>
+        <button class="nav-item" data-page="accepted">
+          <span class="nav-dot"></span>
+          <span class="nav-label">ANGENOMMEN</span>
+          <span class="nav-badge" id="badge-accepted">0</span>
+        </button>
+        <button class="nav-item" data-page="rejected">
+          <span class="nav-dot"></span>
+          <span class="nav-label">ABGELEHNT</span>
+          <span class="nav-badge" id="badge-rejected">0</span>
+        </button>
+        <button class="nav-item" data-page="settings">
+          <span class="nav-dot"></span>
+          <span class="nav-label">EINSTELLUNGEN</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-status" id="sidebar-status">
+        <div class="status-idle">
+          <span class="status-dot dot-idle"></span>
+          Bereit
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-stats">
+          <div class="mini-stat">
+            <span id="s-total">0</span>
+            <span>Gesamt</span>
+          </div>
+          <div class="mini-stat accent">
+            <span id="s-accepted">0</span>
+            <span>Aktiv</span>
+          </div>
+          <div class="mini-stat">
+            <span id="s-checked">0</span>
+            <span>Geprüft</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── MAIN ───────────────────────────────────── -->
+    <main class="main-area">
+
+      <!-- PAGE: LEADS -->
+      <section class="page active" id="page-leads">
+        <div class="page-header">
+          <div class="page-title-group">
+            <h1 class="page-title">Lead-Pipeline</h1>
+            <p class="page-subtitle">Unternehmen mit verbesserungswürdigen Websites</p>
+          </div>
+          <button class="btn-primary" id="btn-generate">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Suche starten
+          </button>
+        </div>
+
+        <!-- Generation Banner -->
+        <div class="gen-banner" id="gen-banner" style="display:none">
+          <div class="gen-spinner"></div>
+          <span class="gen-message" id="gen-message">Suche läuft…</span>
+          <span class="gen-count" id="gen-count"></span>
+          <button class="btn-stop" id="btn-stop" onclick="handleStop()">⏹ Stopp</button>
+        </div>
+
+        <!-- Kategorie Filter -->
+        <div class="filter-bar" id="filter-bar">
+          <span class="filter-label">Filter:</span>
+          <button class="filter-chip active" data-filter="alle" onclick="setFilter('alle', this)">Alle</button>
+          <button class="filter-chip filter-chip-good" data-filter="good" onclick="setFilter('good', this)">★ Gute Leads</button>
+          <button class="filter-chip" data-filter="Handwerker" onclick="setFilter('Handwerker', this)">Handwerker</button>
+          <button class="filter-chip" data-filter="Friseur" onclick="setFilter('Friseur', this)">Friseur</button>
+          <button class="filter-chip" data-filter="Restaurant" onclick="setFilter('Restaurant', this)">Restaurant</button>
+          <button class="filter-chip" data-filter="Autowerkstatt" onclick="setFilter('Autowerkstatt', this)">KFZ-Werkstatt</button>
+          <button class="filter-chip" data-filter="Bäckerei" onclick="setFilter('Bäckerei', this)">Bäckerei</button>
+          <button class="filter-chip" data-filter="Arztpraxis" onclick="setFilter('Arztpraxis', this)">Arztpraxis</button>
+          <button class="filter-chip" data-filter="Reinigung" onclick="setFilter('Reinigung', this)">Reinigung</button>
+          <button class="filter-chip" data-filter="Coiffeur" onclick="setFilter('Coiffeur', this)">Coiffeur</button>
+          <button class="filter-chip" data-filter="Maler" onclick="setFilter('Maler', this)">Maler</button>
+        </div>
+
+        <!-- Leads Grid -->
+        <div class="leads-grid" id="leads-grid"></div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state" style="display:none">
+          <div class="empty-glyph">◎</div>
+          <h3>Keine Leads vorhanden</h3>
+          <p>Trage deinen OpenAI-Key in den Einstellungen ein und starte die Generierung.</p>
+          <button class="btn-primary" onclick="handleGenerate()">Leads generieren</button>
+        </div>
+      </section>
+
+      <!-- PAGE: ACCEPTED -->
+      <section class="page" id="page-accepted">
+        <div class="page-header">
+          <div class="page-title-group">
+            <h1 class="page-title">Angenommene Leads</h1>
+            <p class="page-subtitle">Deine bestätigten Kontakte</p>
+          </div>
+        </div>
+        <div class="leads-grid" id="accepted-grid"></div>
+        <div class="empty-state" id="accepted-empty" style="display:none">
+          <div class="empty-glyph">✓</div>
+          <h3>Noch keine angenommenen Leads</h3>
+          <p>Akzeptiere Leads aus der Pipeline.</p>
+        </div>
+      </section>
+
+      <!-- PAGE: REJECTED -->
+      <section class="page" id="page-rejected">
+        <div class="page-header">
+          <div class="page-title-group">
+            <h1 class="page-title">Abgelehnte Leads</h1>
+            <p class="page-subtitle">Verworfene Kontakte</p>
+          </div>
+        </div>
+        <div class="leads-grid" id="rejected-grid"></div>
+        <div class="empty-state" id="rejected-empty" style="display:none">
+          <div class="empty-glyph">✗</div>
+          <h3>Keine abgelehnten Leads</h3>
+        </div>
+      </section>
+
+      <!-- PAGE: SETTINGS -->
+      <section class="page" id="page-settings">
+        <div class="page-header">
+          <div class="page-title-group">
+            <h1 class="page-title">Einstellungen</h1>
+            <p class="page-subtitle">API-Keys und Suchparameter konfigurieren</p>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <!-- API Keys Card -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon">⚙</span>
+              <h2>API-Schlüssel</h2>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">OpenAI API Key <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <input type="password" id="openaiKey" class="form-input" placeholder="sk-proj-…" autocomplete="off">
+                <button class="input-toggle" onclick="toggleVisibility('openaiKey', this)" title="Anzeigen/Verbergen">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+              <p class="form-hint">Für Query-Generierung (gpt-4o-mini) und Screenshot-Analyse (gpt-4o Vision)</p>
+              <div class="key-status" id="openai-status"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Google Maps API Key <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <input type="password" id="googleMapsKey" class="form-input" placeholder="AIzaSy…" autocomplete="off">
+                <button class="input-toggle" onclick="toggleVisibility('googleMapsKey', this)" title="Anzeigen/Verbergen">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+              <p class="form-hint">Google Cloud Console → Places API (New) aktivieren → API-Schlüssel erstellen</p>
+              <div class="key-status" id="gmaps-status"></div>
+            </div>
+          </div>
+
+          <!-- Search Params Card -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon">⌖</span>
+              <h2>Suchparameter</h2>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Standort</label>
+              <input type="text" id="location" class="form-input" placeholder="z.B. Zürich, Bern, Basel, leer = ganze Schweiz">
+              <p class="form-hint">Nur Schweizer Städte. Leer lassen = ganze Schweiz (alle Kantonshauptstädte)</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Branche</label>
+              <input type="text" id="industry" class="form-input" placeholder="z.B. Handwerker, Restaurant, Friseursalon">
+              <p class="form-hint">Welche Art von Unternehmen suchen?</p>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="settings-actions">
+          <button class="btn-primary" id="btn-save">Einstellungen speichern</button>
+          <div class="save-feedback" id="save-feedback"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ── MODAL: Screenshot Fullscreen ─────────────── -->
+  <div class="modal-overlay" id="modal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <img class="modal-img" id="modal-img" src="" alt="Website Screenshot">
+      <div class="modal-info" id="modal-info"></div>
+    </div>
+  </div>
+
+  <!-- ── TOAST ──────────────────────────────────────── -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

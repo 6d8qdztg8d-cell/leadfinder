@@ -1,0 +1,6 @@
+node_modules/
+public/screenshots/*.jpg
+public/screenshots/*.png
+*.png
+*.jpg.bak
+skills-lock.json
