@@ -126,6 +126,37 @@ async function getCheckedCount() {
   return Object.keys(checked).length;
 }
 
+// ── Pipeline ───────────────────────────────────────────
+async function addToPipeline(id) {
+  const leads = await getAllLeads();
+  const lead = leads.find(l => l.id === id);
+  if (lead) {
+    lead.inPipeline = true;
+    lead.pipelineStatus = lead.pipelineStatus || 'angerufen';
+    lead.pipelineNote = lead.pipelineNote || '';
+    lead.pipelineUpdatedAt = new Date().toISOString();
+    await saveLeads(leads);
+  }
+  return lead;
+}
+
+async function updatePipelineStatus(id, status, note) {
+  const leads = await getAllLeads();
+  const lead = leads.find(l => l.id === id);
+  if (lead) {
+    lead.pipelineStatus = status;
+    if (note !== undefined) lead.pipelineNote = note;
+    lead.pipelineUpdatedAt = new Date().toISOString();
+    await saveLeads(leads);
+  }
+  return lead;
+}
+
+async function getPipelineLeads() {
+  const leads = await getAllLeads();
+  return leads.filter(l => l.inPipeline === true);
+}
+
 // Altes leadExists bleibt für Kompatibilität
 async function leadExists(website, company) {
   if (website && await isUrlChecked(website)) return true;
@@ -150,5 +181,8 @@ module.exports = {
   leadExists,
   markUrlAsChecked,
   isUrlChecked,
-  getCheckedCount
+  getCheckedCount,
+  addToPipeline,
+  updatePipelineStatus,
+  getPipelineLeads
 };

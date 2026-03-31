@@ -3,6 +3,7 @@ const path = require('path');
 const storage = require('./src/storage');
 const { generateLeads, stopGeneration, replenishOne, getStatus } = require('./src/leadGenerator');
 
+
 const app = express();
 const PORT = process.env.PORT || 3737;
 
@@ -65,6 +66,29 @@ app.post('/api/leads/:id/reject', async (req, res) => {
 });
 
 // ──────────────────────────────────────────────
+// Pipeline
+// ──────────────────────────────────────────────
+app.get('/api/pipeline', async (req, res) => {
+  try { res.json(await storage.getPipelineLeads()); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/leads/:id/pipeline', async (req, res) => {
+  try {
+    const lead = await storage.addToPipeline(req.params.id);
+    res.json({ success: true, lead });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/leads/:id/pipeline-status', async (req, res) => {
+  try {
+    const { status, note } = req.body;
+    const lead = await storage.updatePipelineStatus(req.params.id, status, note);
+    res.json({ success: true, lead });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ──────────────────────────────────────────────
 // Generation
 // ──────────────────────────────────────────────
 app.post('/api/generate', async (req, res) => {
@@ -90,6 +114,8 @@ app.get('/api/stats', async (req, res) => {
   try {
     const stats = await storage.getStats();
     stats.checkedUrls = await storage.getCheckedCount();
+    const pipeline = await storage.getPipelineLeads();
+    stats.pipeline = pipeline.length;
     res.json(stats);
   } catch (err) {
     res.status(500).json({ error: err.message });

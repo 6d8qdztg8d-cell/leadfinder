@@ -1186,6 +1186,200 @@ html, body {
   }
 }
 
+/* ═════════════════════════════════════════
+   PIPELINE BOARD
+════════════════════════════════════════= */
+.pipeline-stages-header {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.stage-col {
+  padding: 9px 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pipeline-board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  min-height: 320px;
+  align-items: start;
+}
+
+.pipeline-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  min-height: 120px;
+}
+
+.pipeline-col-empty {
+  text-align: center;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  padding: 28px 0;
+  letter-spacing: 0.1em;
+}
+
+.pipeline-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-hi);
+  border-radius: 8px;
+  padding: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: cardIn 0.25s ease both;
+}
+
+.pipeline-card-company {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.pipeline-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  overflow: hidden;
+}
+
+.pipeline-card-meta a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.pipeline-card-meta a:hover { color: var(--accent); }
+
+.pipeline-steps-track {
+  display: flex;
+  align-items: center;
+  padding: 6px 0 2px;
+  border-top: 1px solid var(--border);
+}
+
+.pipeline-step {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--border-hi);
+  background: var(--bg);
+  cursor: pointer;
+  transition: all var(--transition);
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.pipeline-step.step-active {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.pipeline-step.step-current {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.pipeline-step:hover {
+  border-color: var(--accent);
+  transform: scale(1.3);
+}
+
+.step-connector {
+  flex: 1;
+  height: 2px;
+  background: var(--border-hi);
+  transition: background var(--transition);
+}
+
+.step-connector.connector-active {
+  background: var(--accent);
+}
+
+.pipeline-note {
+  width: 100%;
+  min-height: 50px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 7px 9px;
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--transition);
+  line-height: 1.5;
+}
+
+.pipeline-note:focus { border-color: var(--accent); }
+.pipeline-note::placeholder { color: var(--text-dim); }
+
+/* Pipeline add button on accepted cards */
+.card-pipeline-action {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-pipeline {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid rgba(201, 241, 53, 0.3);
+  border-radius: 7px;
+  color: var(--accent);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-pipeline:hover {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+}
+
+.pipeline-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+}
+
 /* ── Responsive ── */
 @media (max-width: 780px) {
   .sidebar { width: 56px; min-width: 56px; }

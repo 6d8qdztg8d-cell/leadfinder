@@ -46,6 +46,7 @@ async function loadPage(page) {
     case 'leads':    await loadLeads(); break;
     case 'accepted': await loadLeadsByStatus('accepted'); break;
     case 'rejected': await loadLeadsByStatus('rejected'); break;
+    case 'pipeline': await loadPipeline(); break;
     case 'settings': await loadSettings(); break;
   }
 }
@@ -69,6 +70,7 @@ async function loadStats() {
     document.getElementById('badge-pending').textContent  = s.pending;
     document.getElementById('badge-accepted').textContent = s.accepted;
     document.getElementById('badge-rejected').textContent = s.rejected;
+    document.getElementById('badge-pipeline').textContent = s.pipeline || 0;
     document.getElementById('s-total').textContent    = s.total;
     document.getElementById('s-accepted').textContent = s.accepted;
     document.getElementById('s-checked').textContent  = s.checkedUrls || 0;
@@ -277,6 +279,13 @@ function buildCard(lead, showActions = true, extraClass = '') {
          <button class="btn-reject" onclick="rejectLead('${lead.id}', this)">✗ Ablehnen</button>
        </div>` : '';
 
+  // Pipeline button for accepted cards
+  const pipelineHTML = extraClass === 'accepted'
+    ? lead.inPipeline
+      ? `<div class="card-pipeline-action"><span class="pipeline-badge">In Pipeline ✓</span></div>`
+      : `<div class="card-pipeline-action"><button class="btn-pipeline" onclick="addLeadToPipeline('${lead.id}')">+ Pipeline hinzufügen</button></div>`
+    : '';
+
   return `
     <div class="lead-card ${extraClass ? extraClass + '-card' : ''} ${isGood ? 'card-good-lead' : ''}" data-id="${lead.id}">
       <div class="card-screenshot" ${screenshotClick}>
@@ -291,6 +300,7 @@ function buildCard(lead, showActions = true, extraClass = '') {
         ${lead.summary ? `<div class="card-summary">${esc(lead.summary)}</div>` : ''}
       </div>
       ${actionsHTML}
+      ${pipelineHTML}
     </div>`;
 }
 
@@ -517,4 +527,103 @@ async function apiFetch(url, options = {}) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
   return data;
+}
+
+// ── Pipeline ──────────────────────────────────────────────
+
+const PIPELINE_STAGES = ['angerufen', 'interesse', 'angebot', 'vertrag', 'abgeschlossen'];
+const PIPELINE_LABELS = {
+  angerufen:    '📞 Angerufen',
+  interesse:    '✨ Interesse',
+  angebot:      '📄 Angebot',
+  vertrag:      '✍️ Vertrag',
+  abgeschlossen:'✅ Abgeschlossen'
+};
+
+async function loadPipeline() {
+  try {
+    const leads = await apiFetch('/api/pipeline');
+    const board = document.getElementById('pipeline-board');
+    const empty = document.getElementById('pipeline-empty');
+
+    if (!leads.length) {
+      board.innerHTML = '';
+      empty.style.display = 'flex';
+      return;
+    }
+
+    empty.style.display = 'none';
+    board.innerHTML = PIPELINE_STAGES.map(stage => {
+      const stageLeads = leads.filter(l => l.pipelineStatus === stage);
+      return `
+        <div class="pipeline-column">
+          ${stageLeads.length
+            ? stageLeads.map(l => buildPipelineCard(l)).join('')
+            : '<div class="pipeline-col-empty">—</div>'}
+        </div>`;
+    }).join('');
+  } catch (err) {
+    console.error('loadPipeline:', err);
+  }
+}
+
+function buildPipelineCard(lead) {
+  const currentIdx = PIPELINE_STAGES.indexOf(lead.pipelineStatus);
+
+  const stepsHTML = PIPELINE_STAGES.map((s, i) => {
+    const isActive  = i <= currentIdx;
+    const isCurrent = s === lead.pipelineStatus;
+    const dot = `<button class="pipeline-step ${isActive ? 'step-active' : ''} ${isCurrent ? 'step-current' : ''}"
+      onclick="setPipelineStatus('${lead.id}', '${s}')" title="${PIPELINE_LABELS[s]}"></button>`;
+    const connector = i < PIPELINE_STAGES.length - 1
+      ? `<div class="step-connector ${i < currentIdx ? 'connector-active' : ''}"></div>` : '';
+    return dot + connector;
+  }).join('');
+
+  const websiteRow = lead.website
+    ? `<a href="${lead.website}" target="_blank" rel="noopener">${fmtUrl(lead.website)}</a>` : '';
+  const phoneRow = lead.phone ? `<span>☎ ${esc(lead.phone)}</span>` : '';
+
+  return `
+    <div class="pipeline-card" data-id="${lead.id}">
+      <div class="pipeline-card-company">${esc(lead.company)}</div>
+      ${websiteRow || phoneRow ? `<div class="pipeline-card-meta">${websiteRow}${phoneRow}</div>` : ''}
+      <div class="pipeline-steps-track">${stepsHTML}</div>
+      <textarea class="pipeline-note" placeholder="Notiz…"
+        onblur="savePipelineNote('${lead.id}', this)">${esc(lead.pipelineNote || '')}</textarea>
+    </div>`;
+}
+
+async function setPipelineStatus(id, status) {
+  try {
+    await apiFetch(`/api/leads/${id}/pipeline-status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status })
+    });
+    await loadPipeline();
+    await loadStats();
+    showToast(`Status: ${PIPELINE_LABELS[status] || status}`, 'success');
+  } catch (err) {
+    showToast('Fehler: ' + err.message, 'error');
+  }
+}
+
+async function savePipelineNote(id, textarea) {
+  try {
+    await apiFetch(`/api/leads/${id}/pipeline-status`, {
+      method: 'PUT',
+      body: JSON.stringify({ note: textarea.value })
+    });
+  } catch {}
+}
+
+async function addLeadToPipeline(id) {
+  try {
+    await apiFetch(`/api/leads/${id}/pipeline`, { method: 'POST' });
+    showToast('Zur Pipeline hinzugefügt ✓', 'success');
+    await loadLeadsByStatus('accepted');
+    await loadStats();
+  } catch (err) {
+    showToast('Fehler: ' + err.message, 'error');
+  }
 }

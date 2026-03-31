@@ -32,6 +32,11 @@
           <span class="nav-label">ANGENOMMEN</span>
           <span class="nav-badge" id="badge-accepted">0</span>
         </button>
+        <button class="nav-item" data-page="pipeline">
+          <span class="nav-dot"></span>
+          <span class="nav-label">PIPELINE</span>
+          <span class="nav-badge" id="badge-pipeline">0</span>
+        </button>
         <button class="nav-item" data-page="rejected">
           <span class="nav-dot"></span>
           <span class="nav-label">ABGELEHNT</span>
@@ -133,6 +138,29 @@
           <div class="empty-glyph">✓</div>
           <h3>Noch keine angenommenen Leads</h3>
           <p>Akzeptiere Leads aus der Pipeline.</p>
+        </div>
+      </section>
+
+      <!-- PAGE: PIPELINE -->
+      <section class="page" id="page-pipeline">
+        <div class="page-header">
+          <div class="page-title-group">
+            <h1 class="page-title">Sales Pipeline</h1>
+            <p class="page-subtitle">Leads im Verkaufsprozess verfolgen</p>
+          </div>
+        </div>
+        <div class="pipeline-stages-header">
+          <div class="stage-col" data-stage="angerufen">📞 Angerufen</div>
+          <div class="stage-col" data-stage="interesse">✨ Interesse</div>
+          <div class="stage-col" data-stage="angebot">📄 Angebot</div>
+          <div class="stage-col" data-stage="vertrag">✍️ Vertrag</div>
+          <div class="stage-col" data-stage="abgeschlossen">✅ Abgeschlossen</div>
+        </div>
+        <div class="pipeline-board" id="pipeline-board"></div>
+        <div class="empty-state" id="pipeline-empty" style="display:none">
+          <div class="empty-glyph">◎</div>
+          <h3>Keine Leads in der Pipeline</h3>
+          <p>Füge angenommene Leads über "Pipeline hinzufügen" hinzu.</p>
         </div>
       </section>
 
