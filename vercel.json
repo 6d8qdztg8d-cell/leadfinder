@@ -1,6 +1,7 @@
 {
   "version": 2,
-  "buildCommand": null,
+  "installCommand": "",
+  "buildCommand": "",
   "outputDirectory": "docs",
   "framework": null
 }
