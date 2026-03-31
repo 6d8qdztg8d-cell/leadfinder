@@ -1,0 +1,67 @@
+name: Build Windows App
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install pkg
+        run: npm install -g pkg
+
+      - name: Build Windows exe
+        run: pkg server.js --target node18-win-x64 --output dist/LeadFinder.exe --compress GZip
+
+      - name: Prepare release folder
+        run: |
+          mkdir release\LeadFinder
+          copy dist\LeadFinder.exe release\LeadFinder\LeadFinder.exe
+          xcopy /E /I public release\LeadFinder\public
+          mkdir release\LeadFinder\public\screenshots
+          mkdir release\LeadFinder\data
+          echo {} > release\LeadFinder\data\leads.json
+          echo {} > release\LeadFinder\data\checked_urls.json
+          echo {"openaiKey":"","industry":"Handwerker","location":"","autoGenerate":true} > release\LeadFinder\data\settings.json
+        shell: cmd
+
+      - name: Create README
+        run: |
+          echo LeadFinder - KI Lead Generator > release\LeadFinder\STARTEN.txt
+          echo. >> release\LeadFinder\STARTEN.txt
+          echo 1. Doppelklick auf LeadFinder.exe >> release\LeadFinder\STARTEN.txt
+          echo 2. Browser oeffnet sich automatisch >> release\LeadFinder\STARTEN.txt
+          echo 3. OpenAI Key in Einstellungen eintragen >> release\LeadFinder\STARTEN.txt
+          echo 4. Branche und Ort eingeben >> release\LeadFinder\STARTEN.txt
+          echo 5. Suche starten >> release\LeadFinder\STARTEN.txt
+          echo. >> release\LeadFinder\STARTEN.txt
+          echo Benoetigt: Google Chrome oder Microsoft Edge >> release\LeadFinder\STARTEN.txt
+        shell: cmd
+
+      - name: ZIP release folder
+        run: Compress-Archive -Path release\LeadFinder -DestinationPath LeadFinder-Windows.zip
+        shell: pwsh
+
+      - name: Delete old release
+        run: gh release delete latest --yes --cleanup-tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Create GitHub Release
+        run: gh release create latest LeadFinder-Windows.zip --title "LeadFinder Windows App" --notes "Doppelklick auf LeadFinder.exe — Chrome oder Edge wird benoetigt." --latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

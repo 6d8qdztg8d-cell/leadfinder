@@ -7,7 +7,14 @@ const app = express();
 const PORT = process.env.PORT || 3737;
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Im pkg-Modus: statische Dateien neben der .exe, Screenshots separat
+const publicDir = process.pkg
+  ? path.join(path.dirname(process.execPath), 'public')
+  : path.join(__dirname, 'public');
+
+app.use('/screenshots', express.static(path.join(publicDir, 'screenshots')));
+app.use(express.static(process.pkg ? publicDir : path.join(__dirname, 'public')));
 
 // ──────────────────────────────────────────────
 // Leads
@@ -126,7 +133,7 @@ app.put('/api/settings', async (req, res) => {
 // SPA fallback
 // ──────────────────────────────────────────────
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(publicDir, 'index.html'));
 });
 
 app.listen(PORT, () => {
@@ -134,4 +141,14 @@ app.listen(PORT, () => {
   console.log(`  ║   Lead Finder läuft               ║`);
   console.log(`  ║   → http://localhost:${PORT}        ║`);
   console.log(`  ╚═══════════════════════════════════╝\n`);
+
+  // Beim Start als .exe Browser automatisch öffnen
+  if (process.pkg) {
+    const { exec } = require('child_process');
+    const url = `http://localhost:${PORT}`;
+    const cmd = process.platform === 'win32'
+      ? `start "" "${url}"`
+      : `open "${url}"`;
+    setTimeout(() => exec(cmd), 1500);
+  }
 });
