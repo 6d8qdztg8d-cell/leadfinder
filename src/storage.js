@@ -1,9 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-const DATA_DIR = process.pkg
-  ? path.join(path.dirname(process.execPath), 'data')
-  : path.join(__dirname, '..', 'data');
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const LEADS_FILE    = path.join(DATA_DIR, 'leads.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 const CHECKED_FILE  = path.join(DATA_DIR, 'checked_urls.json'); // bereits geprüfte URLs

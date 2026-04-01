@@ -2,12 +2,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
 
-// Pfad neben der .exe wenn als pkg, sonst normal
-const BASE_DIR = process.pkg
-  ? path.dirname(process.execPath)
-  : path.join(__dirname, '..');
-
-const SCREENSHOTS_DIR = path.join(BASE_DIR, 'public', 'screenshots');
+const SCREENSHOTS_DIR = process.env.SCREENSHOTS_DIR || path.join(__dirname, '..', 'public', 'screenshots');
 
 // Browser-Pfade für Windows und Mac
 function getExecutablePath() {
@@ -68,14 +63,13 @@ async function takeScreenshot(url) {
       ]
     };
 
-    // Im pkg-Modus oder wenn kein Chromium: System-Browser nutzen
     const execPath = getExecutablePath();
-    if (process.pkg || execPath) {
-      if (!execPath) throw new Error('Kein Browser gefunden (Chrome/Edge benötigt)');
+    if (execPath) {
       const puppeteer = require('puppeteer-core');
       launchOptions.executablePath = execPath;
       browser = await puppeteer.launch(launchOptions);
     } else {
+      // Fallback für lokale Entwicklung mit gebündeltem Chromium
       const puppeteer = require('puppeteer');
       browser = await puppeteer.launch(launchOptions);
     }

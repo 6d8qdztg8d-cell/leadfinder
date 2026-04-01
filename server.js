@@ -9,13 +9,11 @@ const PORT = process.env.PORT || 3737;
 
 app.use(express.json());
 
-// Im pkg-Modus: statische Dateien neben der .exe, Screenshots separat
-const publicDir = process.pkg
-  ? path.join(path.dirname(process.execPath), 'public')
-  : path.join(__dirname, 'public');
+const publicDir      = process.env.PUBLIC_DIR      || path.join(__dirname, 'public');
+const screenshotsDir = process.env.SCREENSHOTS_DIR || path.join(__dirname, 'public', 'screenshots');
 
-app.use('/screenshots', express.static(path.join(publicDir, 'screenshots')));
-app.use(express.static(process.pkg ? publicDir : path.join(__dirname, 'public')));
+app.use('/screenshots', express.static(screenshotsDir));
+app.use(express.static(publicDir));
 
 // ──────────────────────────────────────────────
 // Leads
@@ -168,13 +166,5 @@ app.listen(PORT, () => {
   console.log(`  ║   → http://localhost:${PORT}        ║`);
   console.log(`  ╚═══════════════════════════════════╝\n`);
 
-  // Beim Start als .exe Browser automatisch öffnen
-  if (process.pkg) {
-    const { exec } = require('child_process');
-    const url = `http://localhost:${PORT}`;
-    const cmd = process.platform === 'win32'
-      ? `start "" "${url}"`
-      : `open "${url}"`;
-    setTimeout(() => exec(cmd), 1500);
-  }
+  // Browser wird von Electron (main.js) geöffnet
 });
