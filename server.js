@@ -160,11 +160,16 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(publicDir, 'index.html'));
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`\n  ╔═══════════════════════════════════╗`);
   console.log(`  ║   Lead Finder läuft               ║`);
   console.log(`  ║   → http://localhost:${PORT}        ║`);
   console.log(`  ╚═══════════════════════════════════╝\n`);
+});
 
-  // Browser wird von Electron (main.js) geöffnet
+server.on('error', (err) => {
+  console.error('[Server] Fehler:', err.message);
+  if (err.code === 'EADDRINUSE') {
+    console.error(`[Server] Port ${PORT} ist bereits belegt. Vorherige Instanz läuft noch?`);
+  }
 });

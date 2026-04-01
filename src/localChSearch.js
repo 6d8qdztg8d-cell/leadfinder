@@ -1,4 +1,5 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+const { getExecutablePath } = require('./screenshotter');
 
 const SWISS_CITIES = [
   'Zürich', 'Bern', 'Basel', 'Genf', 'Lausanne', 'Luzern', 'St. Gallen',
@@ -23,8 +24,11 @@ function isValidWebsite(url) {
 }
 
 async function launchBrowser() {
+  const execPath = getExecutablePath();
+  if (!execPath) throw new Error('Kein Browser gefunden. Bitte Chrome oder Edge installieren.');
   return puppeteer.launch({
     headless: true,
+    executablePath: execPath,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
   });
 }
@@ -151,9 +155,9 @@ async function findBusinessesOnLocalCh(industry) {
 }
 
 // ── Kombinierte Suche: local.ch + DuckDuckGo Web ─────────
-const { findBusinessesViaWeb } = require('./webSearch');
+const { findBusinessesForIndustry: findBusinessesViaWeb } = require('./webSearch');
 
-async function findBusinessesForIndustry(industry) {
+async function findBusinessesForIndustry(industry, openaiKey, onBatch, location) {
   const seen = new Set();
 
   console.log(`[Suche] Starte kombinierte Suche für "${industry}"…`);
@@ -161,7 +165,7 @@ async function findBusinessesForIndustry(industry) {
   // Beide Quellen parallel
   const [localResults, webResults] = await Promise.all([
     findBusinessesOnLocalCh(industry),
-    findBusinessesViaWeb(industry)
+    findBusinessesViaWeb(industry, openaiKey, null, location)
   ]);
 
   const combined = [];

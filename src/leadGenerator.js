@@ -146,7 +146,8 @@ async function processBusiness(biz, openaiKey, industry) {
     return null;
   }
 
-  const screenshotPath = path.join(__dirname, '..', 'public', screenshot.replace(/^\//, ''));
+  const screenshotsDir = process.env.SCREENSHOTS_DIR || path.join(__dirname, '..', 'public', 'screenshots');
+  const screenshotPath = path.join(screenshotsDir, path.basename(screenshot));
   const analysis = await evaluateWithVision(screenshotPath, biz.website, openaiKey);
 
   let contacts = {};
