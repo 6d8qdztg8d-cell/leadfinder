@@ -78,6 +78,13 @@ app.post('/api/leads/:id/pipeline', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.delete('/api/leads/:id/pipeline', async (req, res) => {
+  try {
+    const lead = await storage.removeFromPipeline(req.params.id);
+    res.json({ success: true, lead });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.put('/api/leads/:id/pipeline-status', async (req, res) => {
   try {
     const { status, note } = req.body;

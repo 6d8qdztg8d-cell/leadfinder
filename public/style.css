@@ -1251,6 +1251,29 @@ html, body {
   animation: cardIn 0.25s ease both;
 }
 
+.pipeline-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.btn-pipeline-remove {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color var(--transition);
+}
+
+.btn-pipeline-remove:hover {
+  color: #ff4444;
+}
+
 .pipeline-card-company {
   font-family: 'Syne', sans-serif;
   font-weight: 700;

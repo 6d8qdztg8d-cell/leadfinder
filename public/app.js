@@ -593,7 +593,10 @@ function buildPipelineCard(lead) {
 
   return `
     <div class="pipeline-card" data-id="${lead.id}">
-      <div class="pipeline-card-company">${esc(lead.company)}</div>
+      <div class="pipeline-card-header">
+        <div class="pipeline-card-company">${esc(lead.company)}</div>
+        <button class="btn-pipeline-remove" onclick="removeFromPipeline('${lead.id}')" title="Aus Pipeline entfernen">✕</button>
+      </div>
       ${websiteRow || phoneRow ? `<div class="pipeline-card-meta">${websiteRow}${phoneRow}</div>` : ''}
       <div class="pipeline-steps-track">${stepsHTML}</div>
       <textarea class="pipeline-note" placeholder="Notiz…"
@@ -622,6 +625,17 @@ async function savePipelineNote(id, textarea) {
       body: JSON.stringify({ note: textarea.value })
     });
   } catch {}
+}
+
+async function removeFromPipeline(id) {
+  try {
+    await apiFetch(`/api/leads/${id}/pipeline`, { method: 'DELETE' });
+    await loadPipeline();
+    await loadStats();
+    showToast('Aus Pipeline entfernt', 'success');
+  } catch (err) {
+    showToast('Fehler: ' + err.message, 'error');
+  }
 }
 
 function exportPipelineCSV() {

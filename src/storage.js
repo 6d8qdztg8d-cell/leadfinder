@@ -137,6 +137,19 @@ async function addToPipeline(id) {
   return lead;
 }
 
+async function removeFromPipeline(id) {
+  const leads = await getAllLeads();
+  const lead = leads.find(l => l.id === id);
+  if (lead) {
+    lead.inPipeline = false;
+    lead.pipelineStatus = null;
+    lead.pipelineNote = '';
+    lead.pipelineUpdatedAt = new Date().toISOString();
+    await saveLeads(leads);
+  }
+  return lead;
+}
+
 async function updatePipelineStatus(id, status, note) {
   const leads = await getAllLeads();
   const lead = leads.find(l => l.id === id);
@@ -180,6 +193,7 @@ module.exports = {
   isUrlChecked,
   getCheckedCount,
   addToPipeline,
+  removeFromPipeline,
   updatePipelineStatus,
   getPipelineLeads
 };
