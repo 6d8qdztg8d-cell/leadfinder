@@ -1,4 +1,5 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+const { getExecutablePath } = require('./screenshotter');
 const OpenAI = require('openai');
 
 const SWISS_CITIES = [
@@ -152,8 +153,11 @@ async function findBusinessesForIndustry(industry, openaiKey, onBatch = null, lo
   const seen = new Set();
   const allResults = [];
 
+  const execPath = getExecutablePath();
+  if (!execPath) throw new Error('Kein Browser gefunden. Bitte Chrome oder Edge installieren.');
   const browser = await puppeteer.launch({
     headless: true,
+    executablePath: execPath,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
   });
 

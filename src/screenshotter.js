@@ -64,15 +64,10 @@ async function takeScreenshot(url) {
     };
 
     const execPath = getExecutablePath();
-    if (execPath) {
-      const puppeteer = require('puppeteer-core');
-      launchOptions.executablePath = execPath;
-      browser = await puppeteer.launch(launchOptions);
-    } else {
-      // Fallback für lokale Entwicklung mit gebündeltem Chromium
-      const puppeteer = require('puppeteer');
-      browser = await puppeteer.launch(launchOptions);
-    }
+    if (!execPath) throw new Error('Kein Browser gefunden. Bitte Chrome oder Edge installieren.');
+    const puppeteer = require('puppeteer-core');
+    launchOptions.executablePath = execPath;
+    browser = await puppeteer.launch(launchOptions);
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
@@ -105,4 +100,4 @@ async function takeScreenshot(url) {
   }
 }
 
-module.exports = { takeScreenshot, SCREENSHOTS_DIR };
+module.exports = { takeScreenshot, SCREENSHOTS_DIR, getExecutablePath };
