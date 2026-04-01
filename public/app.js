@@ -390,15 +390,11 @@ async function loadSettings() {
 
     // Keys: show placeholder based on whether they're set
     const openaiInput = document.getElementById('openaiKey');
-    const gmapsInput  = document.getElementById('googleMapsKey');
 
-    openaiInput.placeholder = s.hasOpenaiKey     ? '••••• (gesetzt – neu eingeben zum Ändern)' : 'sk-proj-…';
-    gmapsInput.placeholder  = s.hasGoogleMapsKey ? '••••• (gesetzt – neu eingeben zum Ändern)' : 'AIzaSy…';
+    openaiInput.placeholder = s.hasOpenaiKey ? '••••• (gesetzt – neu eingeben zum Ändern)' : 'sk-proj-…';
     openaiInput.value = '';
-    gmapsInput.value  = '';
 
-    updateKeyStatus('openai-status', s.hasOpenaiKey,     'OpenAI Key gesetzt ✓',      'OpenAI Key fehlt!');
-    updateKeyStatus('gmaps-status',  s.hasGoogleMapsKey, 'Google Maps Key gesetzt ✓', 'Google Maps Key fehlt!');
+    updateKeyStatus('openai-status', s.hasOpenaiKey, 'OpenAI Key gesetzt ✓', 'OpenAI Key fehlt!');
   } catch (err) {
     showToast('Einstellungen konnten nicht geladen werden', 'error');
   }
@@ -417,9 +413,7 @@ async function saveSettings() {
   };
 
   const openaiVal = document.getElementById('openaiKey').value.trim();
-  const gmapsVal  = document.getElementById('googleMapsKey').value.trim();
-  if (openaiVal) payload.openaiKey     = openaiVal;
-  if (gmapsVal)  payload.googleMapsKey = gmapsVal;
+  if (openaiVal) payload.openaiKey = openaiVal;
 
   try {
     await apiFetch('/api/settings', { method: 'PUT', body: JSON.stringify(payload) });

@@ -126,13 +126,11 @@ app.get('/api/stats', async (req, res) => {
 app.get('/api/settings', async (req, res) => {
   try {
     const s = await storage.getSettings();
-    // Mask keys for security
+    // Mask key for security
     res.json({
       ...s,
-      openaiKey:     s.openaiKey     ? '••••••••' + s.openaiKey.slice(-4)     : '',
-      googleMapsKey: s.googleMapsKey ? '••••••••' + s.googleMapsKey.slice(-4) : '',
-      hasOpenaiKey:     !!s.openaiKey,
-      hasGoogleMapsKey: !!s.googleMapsKey
+      openaiKey:    s.openaiKey ? '••••••••' + s.openaiKey.slice(-4) : '',
+      hasOpenaiKey: !!s.openaiKey
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -143,9 +141,8 @@ app.put('/api/settings', async (req, res) => {
   try {
     const current = await storage.getSettings();
     const incoming = req.body;
-    // Don't overwrite keys with masked values
-    if (incoming.openaiKey     && incoming.openaiKey.includes('••'))     delete incoming.openaiKey;
-    if (incoming.googleMapsKey && incoming.googleMapsKey.includes('••')) delete incoming.googleMapsKey;
+    // Don't overwrite key with masked value
+    if (incoming.openaiKey && incoming.openaiKey.includes('••')) delete incoming.openaiKey;
     await storage.saveSettings({ ...current, ...incoming });
     res.json({ success: true });
   } catch (err) {

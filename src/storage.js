@@ -28,7 +28,6 @@ async function writeJSON(file, data) {
 async function getSettings() {
   return readJSON(SETTINGS_FILE, {
     openaiKey: '',
-    googleMapsKey: '',
     industry: 'Handwerker',
     autoGenerate: true
   });
