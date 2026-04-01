@@ -1,6 +1,6 @@
 {
   "name": "lead-finder",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "KI-gestützter Lead-Generator für Webdesign",
   "main": "main.js",
   "scripts": {
@@ -31,11 +31,15 @@
       "artifactName": "LeadFinder-Setup.exe"
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "deleteAppDataOnUninstall": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "LeadFinder"
+      "shortcutName": "LeadFinder",
+      "installerSidebar": null,
+      "uninstallDisplayName": "LeadFinder"
     },
     "files": [
       "main.js",
