@@ -11,9 +11,9 @@
   --border:       #1e1e1e;
   --border-hi:    #2a2a2a;
 
-  --text:         #e8e8e8;
-  --text-muted:   #484848;
-  --text-dim:     #303030;
+  --text:         #ffffff;
+  --text-muted:   #cccccc;
+  --text-dim:     #aaaaaa;
 
   --accent:       #c9f135;
   --accent-dark:  #9aba1e;
@@ -1315,6 +1315,58 @@ html, body {
 .pipeline-step:hover {
   border-color: var(--accent);
   transform: scale(1.3);
+}
+
+.pipeline-column-done {
+  border: 1px solid var(--border-hi);
+  border-radius: 8px;
+  background: var(--card-bg);
+}
+
+.pipeline-done-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 12px;
+  text-align: center;
+  min-height: 140px;
+}
+
+.pipeline-done-count {
+  font-family: 'Syne', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.pipeline-done-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.btn-csv-export {
+  margin-top: 8px;
+  padding: 7px 14px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+  white-space: nowrap;
+}
+
+.btn-csv-export:hover {
+  background: var(--accent);
+  color: #000;
 }
 
 .step-connector {

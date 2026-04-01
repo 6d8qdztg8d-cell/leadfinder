@@ -86,6 +86,35 @@ app.put('/api/leads/:id/pipeline-status', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.get('/api/pipeline/export-csv', async (req, res) => {
+  try {
+    const leads = await storage.getPipelineLeads();
+    const done = leads.filter(l => l.pipelineStatus === 'abgeschlossen');
+
+    const escape = v => {
+      if (v == null) return '';
+      const s = String(v).replace(/"/g, '""');
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s}"` : s;
+    };
+
+    const header = ['Firma', 'Website', 'E-Mail', 'Telefon', 'Notiz', 'Abgeschlossen am'].join(',');
+    const rows = done.map(l => [
+      escape(l.company),
+      escape(l.website),
+      escape(l.email),
+      escape(l.phone),
+      escape(l.pipelineNote),
+      escape(l.pipelineUpdatedAt ? new Date(l.pipelineUpdatedAt).toLocaleString('de-CH') : '')
+    ].join(','));
+
+    const csv = [header, ...rows].join('\r\n');
+    const filename = `abgeschlossen_${new Date().toISOString().slice(0,10)}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send('\uFEFF' + csv); // BOM für Excel
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ──────────────────────────────────────────────
 // Generation
 // ──────────────────────────────────────────────

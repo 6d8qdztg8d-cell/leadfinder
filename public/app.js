@@ -547,7 +547,20 @@ async function loadPipeline() {
     }
 
     empty.style.display = 'none';
+    const doneCount = leads.filter(l => l.pipelineStatus === 'abgeschlossen').length;
     board.innerHTML = PIPELINE_STAGES.map(stage => {
+      if (stage === 'abgeschlossen') {
+        return `
+          <div class="pipeline-column pipeline-column-done">
+            <div class="pipeline-done-panel">
+              <div class="pipeline-done-count">${doneCount}</div>
+              <div class="pipeline-done-label">Abgeschlossen</div>
+              <button class="btn-csv-export" onclick="exportPipelineCSV()">
+                ⬇ CSV exportieren
+              </button>
+            </div>
+          </div>`;
+      }
       const stageLeads = leads.filter(l => l.pipelineStatus === stage);
       return `
         <div class="pipeline-column">
@@ -609,6 +622,13 @@ async function savePipelineNote(id, textarea) {
       body: JSON.stringify({ note: textarea.value })
     });
   } catch {}
+}
+
+function exportPipelineCSV() {
+  const a = document.createElement('a');
+  a.href = '/api/pipeline/export-csv';
+  a.download = '';
+  a.click();
 }
 
 async function addLeadToPipeline(id) {
