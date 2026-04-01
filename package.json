@@ -1,6 +1,6 @@
 {
   "name": "lead-finder",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "KI-gestützter Lead-Generator für Webdesign",
   "main": "main.js",
   "scripts": {

@@ -2,6 +2,23 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const http = require('http');
 
+// Polyfill: Node.js 18 (Electron 28) hat kein globales File-Objekt.
+// Cheerio v1.2 und undici v7 verwenden File als Global bei Module-Load.
+// Ab Node.js 20 ist File eingebaut – bis dahin polyfill mit buffer.Blob.
+if (typeof globalThis.File === 'undefined') {
+  const { Blob } = require('buffer');
+  globalThis.File = class File extends Blob {
+    constructor(blobParts, fileName, options = {}) {
+      super(blobParts, options);
+      this.name = fileName || '';
+      this.lastModified = options?.lastModified ?? Date.now();
+    }
+  };
+  Object.defineProperty(globalThis.File.prototype, Symbol.toStringTag, {
+    value: 'File', configurable: true
+  });
+}
+
 let mainWindow;
 
 function showError(title, detail) {
