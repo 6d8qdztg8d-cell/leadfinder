@@ -34,7 +34,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
 
+      - name: Get version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $env:GITHUB_OUTPUT
+
       - name: Create GitHub Release
-        run: gh release create latest "dist/LeadFinder-Setup.exe" --title "LeadFinder — Windows Installer" --notes "Installer herunterladen, doppelklicken und installieren. Kein Chrome nötig — alles inklusive." --latest
+        run: gh release create latest "dist/LeadFinder-Setup-${{ steps.version.outputs.version }}.exe" --title "LeadFinder v${{ steps.version.outputs.version }}" --notes "Version ${{ steps.version.outputs.version }} — Installer herunterladen und doppelklicken. Überschreibt automatisch alte Versionen." --latest
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

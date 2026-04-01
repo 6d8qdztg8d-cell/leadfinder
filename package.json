@@ -28,7 +28,7 @@
     "copyright": "LeadFinder",
     "win": {
       "target": "nsis",
-      "artifactName": "LeadFinder-Setup.exe"
+      "artifactName": "LeadFinder-Setup-${version}.exe"
     },
     "nsis": {
       "oneClick": true,

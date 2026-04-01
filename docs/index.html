@@ -237,7 +237,7 @@
     dein perfekter Webdesign-Lead auf Knopfdruck.
   </p>
 
-  <a class="download-btn" href="https://github.com/6d8qdztg8d-cell/Leadsgenerator/releases/latest/download/LeadFinder-Setup.exe">
+  <a class="download-btn" id="dl-btn" href="https://github.com/6d8qdztg8d-cell/Leadsgenerator/releases/latest/download/LeadFinder-Setup.exe">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
       <polyline points="7 10 12 15 17 10"/>
@@ -296,6 +296,19 @@
   </div>
 
   <footer>Windows 10/11 · Kein Chrome benötigt · Alles inklusive</footer>
+
+  <script>
+    fetch('https://api.github.com/repos/6d8qdztg8d-cell/Leadsgenerator/releases/latest')
+      .then(r => r.json())
+      .then(data => {
+        const asset = data.assets && data.assets[0];
+        if (asset) document.getElementById('dl-btn').href = asset.browser_download_url;
+        if (data.name) {
+          const note = document.querySelector('.download-note');
+          if (note) note.textContent = data.name + ' · Setup.exe · Installiert sich wie jede Windows-App';
+        }
+      }).catch(() => {});
+  </script>
 
 </body>
 </html>
