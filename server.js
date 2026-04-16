@@ -85,9 +85,15 @@ app.delete('/api/leads/:id/pipeline', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+const VALID_PIPELINE_STAGES = ['angerufen', 'interesse', 'angebot', 'vertrag', 'abgeschlossen'];
+
 app.put('/api/leads/:id/pipeline-status', async (req, res) => {
   try {
     const { status, note } = req.body;
+    // Reject unknown stage values — an invalid stage makes the lead invisible in all columns
+    if (status !== undefined && !VALID_PIPELINE_STAGES.includes(status)) {
+      return res.status(400).json({ error: `Ungültiger Pipeline-Status: ${status}` });
+    }
     const lead = await storage.updatePipelineStatus(req.params.id, status, note);
     res.json({ success: true, lead });
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -175,11 +181,11 @@ app.get('/api/settings', async (req, res) => {
 
 app.put('/api/settings', async (req, res) => {
   try {
-    const current = await storage.getSettings();
     const incoming = req.body;
-    // Don't overwrite key with masked value
-    if (incoming.openaiKey && incoming.openaiKey.includes('••')) delete incoming.openaiKey;
-    await storage.saveSettings({ ...current, ...incoming });
+    // Don't overwrite key with masked value or empty string
+    if (!incoming.openaiKey || incoming.openaiKey.includes('••')) delete incoming.openaiKey;
+    // saveSettings handles the merge internally under a file lock
+    await storage.saveSettings(incoming);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

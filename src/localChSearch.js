@@ -162,25 +162,32 @@ async function findBusinessesForIndustry(industry, openaiKey, onBatch, location)
 
   console.log(`[Suche] Starte kombinierte Suche für "${industry}"…`);
 
-  // Beide Quellen parallel
-  const [localResults, webResults] = await Promise.all([
+  // Wrap onBatch with deduplication so leads from both sources are never emitted twice
+  const safeBatch = onBatch ? async (batch) => {
+    const fresh = batch.filter(biz => {
+      if (!biz.website) return false;
+      try {
+        const domain = new URL(biz.website).hostname.replace('www.', '').toLowerCase();
+        if (seen.has(domain)) return false;
+        seen.add(domain);
+        return true;
+      } catch { return false; }
+    });
+    if (fresh.length > 0) await onBatch(fresh);
+  } : null;
+
+  // Run both sources in parallel; web search streams via onBatch, local.ch returns all at once
+  const [localResults] = await Promise.all([
     findBusinessesOnLocalCh(industry),
-    findBusinessesViaWeb(industry, openaiKey, null, location)
+    findBusinessesViaWeb(industry, openaiKey, safeBatch, location)
   ]);
 
-  const combined = [];
-  for (const biz of [...localResults, ...webResults]) {
-    if (!biz.website) continue;
-    try {
-      const domain = new URL(biz.website).hostname.replace('www.', '').toLowerCase();
-      if (seen.has(domain)) continue;
-      seen.add(domain);
-      combined.push(biz);
-    } catch {}
+  // Emit local.ch results that weren't already sent by the web search
+  if (localResults.length > 0 && safeBatch) {
+    await safeBatch(localResults);
   }
 
-  console.log(`[Suche] Kombiniert: ${combined.length} Firmen (local.ch: ${localResults.length}, Web: ${webResults.length})`);
-  return combined;
+  console.log(`[Suche] Kombinierte Suche abgeschlossen für "${industry}"`);
 }
 
 module.exports = { findBusinessesForIndustry };

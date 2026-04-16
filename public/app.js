@@ -561,7 +561,7 @@ async function loadPipeline() {
             </div>
           </div>`;
       }
-      const stageLeads = leads.filter(l => l.pipelineStatus === stage);
+      const stageLeads = leads.filter(l => l.pipelineStatus === stage || (stage === 'angerufen' && !l.pipelineStatus));
       return `
         <div class="pipeline-column">
           ${stageLeads.length
@@ -624,7 +624,10 @@ async function savePipelineNote(id, textarea) {
       method: 'PUT',
       body: JSON.stringify({ note: textarea.value })
     });
-  } catch {}
+  } catch (err) {
+    showToast('Notiz konnte nicht gespeichert werden!', 'error');
+    console.error('savePipelineNote:', err);
+  }
 }
 
 async function removeFromPipeline(id) {
