@@ -3,3 +3,5 @@ skills-lock.json
 Bildschirmfoto*
 .env
 data/
+docs/
+.DS_Store

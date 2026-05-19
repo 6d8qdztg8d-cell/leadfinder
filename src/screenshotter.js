@@ -4,9 +4,35 @@ const { v4: uuidv4 } = require('uuid');
 
 const SCREENSHOTS_DIR = process.env.SCREENSHOTS_DIR || path.join(__dirname, '..', 'public', 'screenshots');
 
-// Browser-Pfade für Windows und Mac
+// Browser-Pfade für Windows, Mac und Linux (Railway/Server)
 function getExecutablePath() {
   const platform = process.platform;
+  const fsSync = require('fs');
+
+  if (platform === 'linux') {
+    // Zuerst via PATH suchen (Railway/Nixpacks installiert chromium dort)
+    try {
+      const { execSync } = require('child_process');
+      const found = execSync(
+        'which chromium 2>/dev/null || which chromium-browser 2>/dev/null || which google-chrome-stable 2>/dev/null || which google-chrome 2>/dev/null',
+        { encoding: 'utf8', timeout: 3000 }
+      ).trim().split('\n')[0];
+      if (found) return found;
+    } catch {}
+
+    // Bekannte Pfade als Fallback
+    const candidates = [
+      '/usr/bin/chromium',
+      '/usr/bin/chromium-browser',
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/google-chrome',
+      '/snap/bin/chromium',
+    ];
+    for (const p of candidates) {
+      if (fsSync.existsSync(p)) return p;
+    }
+    return null;
+  }
 
   if (platform === 'win32') {
     const candidates = [
@@ -15,11 +41,10 @@ function getExecutablePath() {
       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
       'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
     ];
-    const fsSync = require('fs');
     for (const p of candidates) {
       if (fsSync.existsSync(p)) return p;
     }
-    return null; // keiner gefunden
+    return null;
   }
 
   if (platform === 'darwin') {
@@ -28,7 +53,6 @@ function getExecutablePath() {
       '/Applications/Chromium.app/Contents/MacOS/Chromium',
       '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
     ];
-    const fsSync = require('fs');
     for (const p of candidates) {
       if (fsSync.existsSync(p)) return p;
     }
