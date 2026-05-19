@@ -1,13 +1,29 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const storage = require('./src/storage');
 const { generateLeads, stopGeneration, replenishOne, getStatus } = require('./src/leadGenerator');
 
-
 const app = express();
 const PORT = process.env.PORT || 3737;
 
 app.use(express.json());
+
+// ── Optional HTTP Basic Auth ──────────────────────────────────────────────────
+// Set ADMIN_PASSWORD env var to enable password protection.
+if (process.env.ADMIN_PASSWORD) {
+  app.use((req, res, next) => {
+    const auth = req.headers.authorization;
+    if (auth && auth.startsWith('Basic ')) {
+      const decoded = Buffer.from(auth.slice(6), 'base64').toString('utf8');
+      const colon = decoded.indexOf(':');
+      const pass = colon >= 0 ? decoded.slice(colon + 1) : decoded;
+      if (pass === process.env.ADMIN_PASSWORD) return next();
+    }
+    res.set('WWW-Authenticate', 'Basic realm="LeadFinder"');
+    res.status(401).send('Zugangsdaten erforderlich');
+  });
+}
 
 const publicDir      = process.env.PUBLIC_DIR      || path.join(__dirname, 'public');
 const screenshotsDir = process.env.SCREENSHOTS_DIR || path.join(__dirname, 'public', 'screenshots');
@@ -199,16 +215,27 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(publicDir, 'index.html'));
 });
 
-const server = app.listen(PORT, () => {
-  console.log(`\n  ╔═══════════════════════════════════╗`);
-  console.log(`  ║   Lead Finder läuft               ║`);
-  console.log(`  ║   → http://localhost:${PORT}        ║`);
-  console.log(`  ╚═══════════════════════════════════╝\n`);
-});
+// ── Startup: migrate JSON → SQLite, then listen ───────────────────────────────
+function startServer() {
+  const server = app.listen(PORT, () => {
+    console.log(`\n  ╔═══════════════════════════════════╗`);
+    console.log(`  ║   Lead Finder läuft               ║`);
+    console.log(`  ║   → http://localhost:${PORT}        ║`);
+    console.log(`  ╚═══════════════════════════════════╝\n`);
+  });
+  server.on('error', (err) => {
+    console.error('[Server] Fehler:', err.message);
+    if (err.code === 'EADDRINUSE') {
+      console.error(`[Server] Port ${PORT} ist bereits belegt.`);
+    }
+  });
+}
 
-server.on('error', (err) => {
-  console.error('[Server] Fehler:', err.message);
-  if (err.code === 'EADDRINUSE') {
-    console.error(`[Server] Port ${PORT} ist bereits belegt. Vorherige Instanz läuft noch?`);
-  }
-});
+const migrationTimeout = new Promise((_, reject) =>
+  setTimeout(() => reject(new Error('Migration timeout (5s)')), 5000)
+);
+
+Promise.race([storage.migrateFromJson(), migrationTimeout])
+  .catch(err => console.warn('[migration] Übersprungen:', err.message))
+  .finally(startServer);
+

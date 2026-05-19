@@ -1,3 +1,7 @@
 node_modules/
 skills-lock.json
 Bildschirmfoto*
+.env
+data/leadfinder.db
+data/leadfinder.db-wal
+data/leadfinder.db-shm
