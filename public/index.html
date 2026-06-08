@@ -97,6 +97,11 @@
           <button class="btn-stop" id="btn-stop" onclick="handleStop()">⏹ Stopp</button>
         </div>
 
+        <!-- Suchfeld -->
+        <div class="search-bar">
+          <input type="text" class="search-input" id="leads-search" placeholder="Suche nach Firma, Website, E-Mail…" oninput="onLeadsSearch(this.value)">
+        </div>
+
         <!-- Kategorie Filter -->
         <div class="filter-bar" id="filter-bar">
           <span class="filter-label">Filter:</span>
@@ -133,6 +138,9 @@
             <p class="page-subtitle">Deine bestätigten Kontakte</p>
           </div>
         </div>
+        <div class="search-bar">
+          <input type="text" class="search-input" id="accepted-search" placeholder="Suche nach Firma, Website, E-Mail…" oninput="onAcceptedSearch(this.value)">
+        </div>
         <div class="leads-grid" id="accepted-grid"></div>
         <div class="empty-state" id="accepted-empty" style="display:none">
           <div class="empty-glyph">✓</div>
@@ -149,14 +157,17 @@
             <p class="page-subtitle">Leads im Verkaufsprozess verfolgen</p>
           </div>
         </div>
-        <div class="pipeline-stages-header">
-          <div class="stage-col" data-stage="angerufen">📞 Angerufen</div>
-          <div class="stage-col" data-stage="interesse">✨ Interesse</div>
-          <div class="stage-col" data-stage="angebot">📄 Angebot</div>
-          <div class="stage-col" data-stage="vertrag">✍️ Vertrag</div>
-          <div class="stage-col" data-stage="abgeschlossen">✅ Abgeschlossen</div>
+        <div class="pipeline-wrapper">
+          <div class="pipeline-stages-header">
+            <div class="stage-col" data-stage="rückruf">📞 Rückruf</div>
+            <div class="stage-col" data-stage="abgelehnt">✗ Abgelehnt</div>
+            <div class="stage-col" data-stage="interesse">✨ Interesse</div>
+            <div class="stage-col" data-stage="angebot">📄 Angebot</div>
+            <div class="stage-col" data-stage="vertrag">✍️ Vertrag</div>
+            <div class="stage-col stage-col-done" data-stage="abgeschlossen">✅ Abgeschlossen/Verrechnet</div>
+          </div>
+          <div class="pipeline-board" id="pipeline-board"></div>
         </div>
-        <div class="pipeline-board" id="pipeline-board"></div>
         <div class="empty-state" id="pipeline-empty" style="display:none">
           <div class="empty-glyph">◎</div>
           <h3>Keine Leads in der Pipeline</h3>
@@ -171,6 +182,9 @@
             <h1 class="page-title">Abgelehnte Leads</h1>
             <p class="page-subtitle">Verworfene Kontakte</p>
           </div>
+        </div>
+        <div class="search-bar">
+          <input type="text" class="search-input" id="rejected-search" placeholder="Suche nach Firma, Website, E-Mail…" oninput="onRejectedSearch(this.value)">
         </div>
         <div class="leads-grid" id="rejected-grid"></div>
         <div class="empty-state" id="rejected-empty" style="display:none">

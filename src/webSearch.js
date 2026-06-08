@@ -64,17 +64,22 @@ async function generateQueries(industry, openaiKey, location = null) {
       model: 'gpt-4o-mini',
       messages: [{
         role: 'user',
-        content: `Erstelle 25 einfache Suchbegriffe für Google um Schweizer Kleinunternehmen der Branche "${industry}" zu finden.
+        content: `Erstelle 25 Suchbegriffe für Google um Schweizer KMUs und Einzelunternehmer der Branche "${industry}" zu finden.
+
+Zielgruppe: KMUs, Einzelunternehmer, Pizzerias, Bäckereien, Handwerker, Reinigungen, lokale Kleinbetriebe.
 
 Regeln:
-- Einfach: "[Branche] [Stadt]" oder "[Synonym] [Stadt]"
+- Format: "[Branche] [Stadt]" oder "[Firmentyp] [Stadt]"
 - Synonyme auf Deutsch, Französisch, Italienisch verwenden
 - ${cityContext}
-- Keine komplizierten Formulierungen
+- KEINE Superlative: NICHT "beste", "besten", "top", "empfehlung", "empfehlungen", "beliebt"
+- KEINE Listen-Suchanfragen wie "Restaurants in Zürich" → NUR direkte Firmensuchen
+- KEINE Aggregatoren-Keywords (kein "liste", "verzeichnis", "directory")
+- Ziel: direkte Website einzelner Betriebe finden, NICHT Portale oder Bestenlisten
 
 Antworte NUR mit JSON-Array: ["Begriff 1", "Begriff 2", ...]`
       }],
-      max_tokens: 500,
+      max_tokens: 600,
       temperature: 0.9
     });
     const match = res.choices[0].message.content.match(/\[[\s\S]*\]/);

@@ -45,7 +45,8 @@ app.get('/api/leads', async (req, res) => {
 
 app.get('/api/leads/accepted', async (req, res) => {
   try {
-    res.json(await storage.getLeadsByStatus('accepted'));
+    const leads = await storage.getLeadsByStatus('accepted');
+    res.json(leads.filter(l => !l.inPipeline));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -101,7 +102,7 @@ app.delete('/api/leads/:id/pipeline', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-const VALID_PIPELINE_STAGES = ['angerufen', 'interesse', 'angebot', 'vertrag', 'abgeschlossen'];
+const VALID_PIPELINE_STAGES = ['rückruf', 'angerufen', 'abgelehnt', 'interesse', 'angebot', 'vertrag', 'abgeschlossen'];
 
 app.put('/api/leads/:id/pipeline-status', async (req, res) => {
   try {

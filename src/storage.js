@@ -203,7 +203,7 @@ async function addToPipeline(id) {
   db().prepare(`
     UPDATE leads SET
       in_pipeline         = 1,
-      pipeline_status     = COALESCE(NULLIF(pipeline_status,''), 'angerufen'),
+      pipeline_status     = COALESCE(NULLIF(pipeline_status,''), 'rückruf'),
       pipeline_note       = COALESCE(pipeline_note, ''),
       pipeline_updated_at = ?,
       updated_at          = ?

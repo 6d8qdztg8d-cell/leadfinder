@@ -8,6 +8,11 @@ let pollTimer = null;
 let statusTimer = null;
 let activeFilter = 'alle';
 let allLeads = [];
+let allAccepted = [];
+let allRejected = [];
+let searchLeads    = '';
+let searchAccepted = '';
+let searchRejected = '';
 
 // ── Init ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -53,13 +58,11 @@ async function loadPage(page) {
 
 // ── Polling ─────────────────────────────────────────────
 function startPolling() {
-  // Refresh leads and stats every 4 seconds
   pollTimer = setInterval(async () => {
     if (currentPage === 'leads') await loadLeads();
     await loadStats();
   }, 4000);
 
-  // Check generation status every 1.5 seconds
   statusTimer = setInterval(checkGenerationStatus, 1500);
 }
 
@@ -121,7 +124,6 @@ async function setFilter(filter, btn) {
   btn.classList.add('active');
   renderLeadsGrid();
 
-  // Industrie-Chips: nur Einstellung speichern, Suche NICHT unterbrechen
   if (INDUSTRY_FILTERS.includes(filter)) {
     await apiFetch('/api/settings', {
       method: 'PUT',
@@ -140,19 +142,63 @@ function applyFilter(leads) {
   });
 }
 
+function applySearch(leads, query) {
+  if (!query.trim()) return leads;
+  const q = query.toLowerCase();
+  return leads.filter(l =>
+    (l.company   || '').toLowerCase().includes(q) ||
+    (l.website   || '').toLowerCase().includes(q) ||
+    (l.email     || '').toLowerCase().includes(q) ||
+    (l.phone     || '').toLowerCase().includes(q) ||
+    (l.summary   || '').toLowerCase().includes(q)
+  );
+}
+
+function onLeadsSearch(val) {
+  searchLeads = val;
+  renderLeadsGrid();
+}
+
+function onAcceptedSearch(val) {
+  searchAccepted = val;
+  renderStatusGrid('accepted', allAccepted);
+}
+
+function onRejectedSearch(val) {
+  searchRejected = val;
+  renderStatusGrid('rejected', allRejected);
+}
+
 function renderLeadsGrid() {
   const grid  = document.getElementById('leads-grid');
   const empty = document.getElementById('empty-state');
-  const filtered = applyFilter(allLeads);
+  let filtered = applyFilter(allLeads);
+  filtered = applySearch(filtered, searchLeads);
 
   if (!filtered.length) {
     grid.innerHTML = '';
     if (!allLeads.length) empty.style.display = 'flex';
-    else empty.style.display = 'none'; // leads exist but filtered out
+    else empty.style.display = 'none';
     return;
   }
   empty.style.display = 'none';
   grid.innerHTML = filtered.map(l => buildCard(l, true)).join('');
+}
+
+function renderStatusGrid(status, leads) {
+  const grid  = document.getElementById(`${status}-grid`);
+  const empty = document.getElementById(`${status}-empty`);
+  const query = status === 'accepted' ? searchAccepted : searchRejected;
+  const filtered = applySearch(leads, query);
+
+  if (!filtered.length) {
+    grid.innerHTML = '';
+    if (!leads.length && empty) empty.style.display = 'flex';
+    else if (empty) empty.style.display = 'none';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  grid.innerHTML = filtered.map(l => buildCard(l, false, status)).join('');
 }
 
 // ── Load leads (pending) ─────────────────────────────────
@@ -161,10 +207,9 @@ async function loadLeads() {
     const leads = await apiFetch('/api/leads');
     const empty = document.getElementById('empty-state');
 
-    // Check if new leads arrived
     const prevIds = allLeads.map(l => l.id).join(',');
     const newIds  = leads.map(l => l.id).join(',');
-    if (prevIds === newIds) return; // nichts geändert
+    if (prevIds === newIds) return;
 
     allLeads = leads;
 
@@ -186,17 +231,11 @@ async function loadLeads() {
 async function loadLeadsByStatus(status) {
   try {
     const leads = await apiFetch(`/api/leads/${status}`);
-    const grid  = document.getElementById(`${status}-grid`);
-    const empty = document.getElementById(`${status}-empty`);
 
-    if (!leads.length) {
-      grid.innerHTML = '';
-      if (empty) empty.style.display = 'flex';
-      return;
-    }
+    if (status === 'accepted') allAccepted = leads;
+    else allRejected = leads;
 
-    if (empty) empty.style.display = 'none';
-    grid.innerHTML = leads.map(l => buildCard(l, false, status)).join('');
+    renderStatusGrid(status, leads);
   } catch (err) {
     console.error(`load ${status}:`, err);
   }
@@ -204,13 +243,11 @@ async function loadLeadsByStatus(status) {
 
 // ── Build lead card HTML ─────────────────────────────────
 function buildCard(lead, showActions = true, extraClass = '') {
-  // Dual score system
   const webScore = lead.websiteScore  ?? null;
   const bizScore = lead.businessScore ?? null;
   const isGood   = lead.isGoodLead;
   const conf     = lead.confidence ?? null;
 
-  // Colors
   function scoreColor(s) {
     if (s == null) return 'var(--text-muted)';
     if (s < 40)  return 'var(--score-bad)';
@@ -225,7 +262,6 @@ function buildCard(lead, showActions = true, extraClass = '') {
       ? `<span class="lead-badge badge-weak">Schwacher Lead</span>`
       : '';
 
-  // Score bars (only if new format)
   const dualScoreHTML = webScore != null ? `
     <div class="dual-score">
       <div class="dscore-row">
@@ -245,7 +281,6 @@ function buildCard(lead, showActions = true, extraClass = '') {
       ${conf != null ? `<div class="dscore-conf">Konfidenz: ${conf}%</div>` : ''}
     </div>` : '';
 
-  // Screenshot
   const screenshotHTML = lead.screenshot
     ? `<img src="${lead.screenshot}" alt="${esc(lead.company)}" loading="lazy" onerror="this.parentElement.innerHTML=noScreenshotHTML()">
        <div class="screenshot-overlay"></div>
@@ -258,7 +293,6 @@ function buildCard(lead, showActions = true, extraClass = '') {
   const screenshotClick = lead.screenshot
     ? `onclick="openModal('${lead.screenshot}', '${esc(lead.company)}')"` : '';
 
-  // Meta rows
   const websiteRow = lead.website
     ? `<div class="meta-row"><span class="meta-icon">🌐</span><span class="meta-val"><a href="${lead.website}" target="_blank" rel="noopener">${fmtUrl(lead.website)}</a></span></div>` : '';
   const emailRow = lead.email
@@ -268,18 +302,22 @@ function buildCard(lead, showActions = true, extraClass = '') {
   const addressRow = lead.address
     ? `<div class="meta-row"><span class="meta-icon">📍</span><span class="meta-val">${esc(lead.address)}</span></div>` : '';
 
-  // Reasons / Issues
   const items = lead.reasons?.length ? lead.reasons : (lead.issues || []);
   const issuesHTML = items.slice(0, 4).map(i => `<span class="issue-tag">${esc(i)}</span>`).join('');
 
-  // Actions
   const actionsHTML = showActions
     ? `<div class="card-actions">
          <button class="btn-accept" onclick="acceptLead('${lead.id}', this)">✓ Annehmen</button>
          <button class="btn-reject" onclick="rejectLead('${lead.id}', this)">✗ Ablehnen</button>
        </div>` : '';
 
-  // Pipeline button for accepted cards
+  // Rejected card: restore buttons
+  const rejectedActionsHTML = extraClass === 'rejected'
+    ? `<div class="card-actions card-restore-actions">
+         <button class="btn-accept" onclick="restoreLeadToAccepted('${lead.id}', this)">↩ Angenommen</button>
+         <button class="btn-pipeline btn-pipeline-direct" onclick="restoreLeadToPipeline('${lead.id}', this)">→ Pipeline</button>
+       </div>` : '';
+
   const pipelineHTML = extraClass === 'accepted'
     ? lead.inPipeline
       ? `<div class="card-pipeline-action"><span class="pipeline-badge">In Pipeline ✓</span></div>`
@@ -300,6 +338,7 @@ function buildCard(lead, showActions = true, extraClass = '') {
         ${lead.summary ? `<div class="card-summary">${esc(lead.summary)}</div>` : ''}
       </div>
       ${actionsHTML}
+      ${rejectedActionsHTML}
       ${pipelineHTML}
     </div>`;
 }
@@ -328,6 +367,35 @@ async function rejectLead(id, btn) {
     await apiFetch(`/api/leads/${id}/reject`, { method: 'POST' });
     removeCard(id);
     showToast('Lead abgelehnt', '');
+    await loadStats();
+  } catch (err) {
+    showToast('Fehler: ' + err.message, 'error');
+    enableCardButtons(btn);
+  }
+}
+
+async function restoreLeadToAccepted(id, btn) {
+  disableCardButtons(btn);
+  try {
+    await apiFetch(`/api/leads/${id}/accept`, { method: 'POST' });
+    removeCard(id);
+    allRejected = allRejected.filter(l => l.id !== id);
+    showToast('Lead wiederhergestellt ✓', 'success');
+    await loadStats();
+  } catch (err) {
+    showToast('Fehler: ' + err.message, 'error');
+    enableCardButtons(btn);
+  }
+}
+
+async function restoreLeadToPipeline(id, btn) {
+  disableCardButtons(btn);
+  try {
+    await apiFetch(`/api/leads/${id}/accept`, { method: 'POST' });
+    await apiFetch(`/api/leads/${id}/pipeline`, { method: 'POST' });
+    removeCard(id);
+    allRejected = allRejected.filter(l => l.id !== id);
+    showToast('Lead zur Pipeline hinzugefügt ✓', 'success');
     await loadStats();
   } catch (err) {
     showToast('Fehler: ' + err.message, 'error');
@@ -388,9 +456,7 @@ async function loadSettings() {
     document.getElementById('location').value = s.location || '';
     document.getElementById('industry').value = s.industry || '';
 
-    // Keys: show placeholder based on whether they're set
     const openaiInput = document.getElementById('openaiKey');
-
     openaiInput.placeholder = s.hasOpenaiKey ? '••••• (gesetzt – neu eingeben zum Ändern)' : 'sk-proj-…';
     openaiInput.value = '';
 
@@ -418,14 +484,12 @@ async function saveSettings() {
   try {
     await apiFetch('/api/settings', { method: 'PUT', body: JSON.stringify(payload) });
 
-    // Show feedback
     const fb = document.getElementById('save-feedback');
     fb.textContent = '✓ Gespeichert';
     fb.classList.add('visible');
     setTimeout(() => fb.classList.remove('visible'), 2500);
 
     showToast('Einstellungen gespeichert', 'success');
-    // Reload to show updated status
     await loadSettings();
   } catch (err) {
     showToast('Fehler beim Speichern: ' + err.message, 'error');
@@ -525,13 +589,15 @@ async function apiFetch(url, options = {}) {
 
 // ── Pipeline ──────────────────────────────────────────────
 
-const PIPELINE_STAGES = ['angerufen', 'interesse', 'angebot', 'vertrag', 'abgeschlossen'];
+const PIPELINE_STAGES = ['rückruf', 'abgelehnt', 'interesse', 'angebot', 'vertrag', 'abgeschlossen'];
 const PIPELINE_LABELS = {
-  angerufen:    '📞 Angerufen',
-  interesse:    '✨ Interesse',
-  angebot:      '📄 Angebot',
-  vertrag:      '✍️ Vertrag',
-  abgeschlossen:'✅ Abgeschlossen'
+  rückruf:       '📞 Rückruf',
+  angerufen:     '📞 Rückruf',   // legacy alias
+  abgelehnt:     '✗ Abgelehnt',
+  interesse:     '✨ Interesse',
+  angebot:       '📄 Angebot',
+  vertrag:       '✍️ Vertrag',
+  abgeschlossen: '✅ Abgeschlossen/Verrechnet'
 };
 
 async function loadPipeline() {
@@ -548,20 +614,25 @@ async function loadPipeline() {
 
     empty.style.display = 'none';
     const doneCount = leads.filter(l => l.pipelineStatus === 'abgeschlossen').length;
+
     board.innerHTML = PIPELINE_STAGES.map(stage => {
       if (stage === 'abgeschlossen') {
         return `
           <div class="pipeline-column pipeline-column-done">
             <div class="pipeline-done-panel">
               <div class="pipeline-done-count">${doneCount}</div>
-              <div class="pipeline-done-label">Abgeschlossen</div>
+              <div class="pipeline-done-label">Abgeschlossen/Verrechnet</div>
               <button class="btn-csv-export" onclick="exportPipelineCSV()">
                 ⬇ CSV exportieren
               </button>
             </div>
           </div>`;
       }
-      const stageLeads = leads.filter(l => l.pipelineStatus === stage || (stage === 'angerufen' && !l.pipelineStatus));
+      // legacy 'angerufen' maps to 'rückruf' column
+      const stageLeads = leads.filter(l =>
+        l.pipelineStatus === stage ||
+        (stage === 'rückruf' && (l.pipelineStatus === 'angerufen' || !l.pipelineStatus))
+      );
       return `
         <div class="pipeline-column">
           ${stageLeads.length
@@ -575,11 +646,12 @@ async function loadPipeline() {
 }
 
 function buildPipelineCard(lead) {
-  const currentIdx = PIPELINE_STAGES.indexOf(lead.pipelineStatus);
+  const currentStage = lead.pipelineStatus === 'angerufen' ? 'rückruf' : (lead.pipelineStatus || 'rückruf');
+  const currentIdx = PIPELINE_STAGES.indexOf(currentStage);
 
   const stepsHTML = PIPELINE_STAGES.map((s, i) => {
     const isActive  = i <= currentIdx;
-    const isCurrent = s === lead.pipelineStatus;
+    const isCurrent = s === currentStage;
     const dot = `<button class="pipeline-step ${isActive ? 'step-active' : ''} ${isCurrent ? 'step-current' : ''}"
       onclick="setPipelineStatus('${lead.id}', '${s}')" title="${PIPELINE_LABELS[s]}"></button>`;
     const connector = i < PIPELINE_STAGES.length - 1
@@ -589,7 +661,10 @@ function buildPipelineCard(lead) {
 
   const websiteRow = lead.website
     ? `<a href="${lead.website}" target="_blank" rel="noopener">${fmtUrl(lead.website)}</a>` : '';
-  const phoneRow = lead.phone ? `<span>☎ ${esc(lead.phone)}</span>` : '';
+  const phoneRow  = lead.phone  ? `<span>☎ ${esc(lead.phone)}</span>`  : '';
+  const emailRow  = lead.email  ? `<span>✉ ${esc(lead.email)}</span>`  : '';
+
+  const stageLabel = PIPELINE_LABELS[currentStage] || currentStage;
 
   return `
     <div class="pipeline-card" data-id="${lead.id}">
@@ -597,7 +672,8 @@ function buildPipelineCard(lead) {
         <div class="pipeline-card-company">${esc(lead.company)}</div>
         <button class="btn-pipeline-remove" onclick="removeFromPipeline('${lead.id}')" title="Aus Pipeline entfernen">✕</button>
       </div>
-      ${websiteRow || phoneRow ? `<div class="pipeline-card-meta">${websiteRow}${phoneRow}</div>` : ''}
+      <div class="pipeline-card-stage-badge">${stageLabel}</div>
+      ${websiteRow || phoneRow || emailRow ? `<div class="pipeline-card-meta">${websiteRow}${phoneRow}${emailRow}</div>` : ''}
       <div class="pipeline-steps-track">${stepsHTML}</div>
       <textarea class="pipeline-note" placeholder="Notiz…"
         onblur="savePipelineNote('${lead.id}', this)">${esc(lead.pipelineNote || '')}</textarea>
@@ -652,7 +728,9 @@ async function addLeadToPipeline(id) {
   try {
     await apiFetch(`/api/leads/${id}/pipeline`, { method: 'POST' });
     showToast('Zur Pipeline hinzugefügt ✓', 'success');
-    await loadLeadsByStatus('accepted');
+    // Remove card from Angenommen view immediately
+    removeCard(id);
+    allAccepted = allAccepted.filter(l => l.id !== id);
     await loadStats();
   } catch (err) {
     showToast('Fehler: ' + err.message, 'error');

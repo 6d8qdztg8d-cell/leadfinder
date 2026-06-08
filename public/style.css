@@ -1186,14 +1186,59 @@ html, body {
   }
 }
 
+/* ── Search Bar ── */
+.search-bar {
+  margin-bottom: 14px;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 480px;
+  padding: 9px 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-hi);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.search-input::placeholder { color: var(--text-dim); }
+.search-input:focus { border-color: var(--accent); }
+
+/* ── Restore buttons on rejected cards ── */
+.card-restore-actions {
+  display: flex !important;
+}
+
+.btn-pipeline-direct {
+  flex: 1;
+  padding: 9px;
+  border-radius: 7px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
 /* ═════════════════════════════════════════
    PIPELINE BOARD
 ════════════════════════════════════════= */
+.pipeline-wrapper {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
 .pipeline-stages-header {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, minmax(190px, 1fr));
   gap: 8px;
   margin-bottom: 8px;
+  min-width: 1140px;
 }
 
 .stage-col {
@@ -1214,9 +1259,10 @@ html, body {
 
 .pipeline-board {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, minmax(190px, 1fr));
   gap: 8px;
   min-height: 320px;
+  min-width: 1140px;
   align-items: start;
 }
 
@@ -1244,10 +1290,10 @@ html, body {
   background: var(--card-bg);
   border: 1px solid var(--border-hi);
   border-radius: 8px;
-  padding: 11px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   animation: cardIn 0.25s ease both;
 }
 
@@ -1255,7 +1301,19 @@ html, body {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 4px;
+  gap: 6px;
+}
+
+.pipeline-card-stage-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  text-transform: uppercase;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
 }
 
 .btn-pipeline-remove {
@@ -1277,7 +1335,7 @@ html, body {
 .pipeline-card-company {
   font-family: 'Syne', sans-serif;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text);
   line-height: 1.3;
   word-break: break-word;
@@ -1286,9 +1344,9 @@ html, body {
 .pipeline-card-meta {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
   overflow: hidden;
 }
@@ -1405,14 +1463,14 @@ html, body {
 
 .pipeline-note {
   width: 100%;
-  min-height: 50px;
+  min-height: 62px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 5px;
   color: var(--text);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  padding: 7px 9px;
+  font-size: 11px;
+  padding: 8px 10px;
   resize: vertical;
   outline: none;
   transition: border-color var(--transition);
