@@ -47,8 +47,10 @@ jobs:
         run: echo "version=$(node -p "require('./package.json').version")" >> $env:GITHUB_OUTPUT
 
       - name: Create GitHub Release with Windows installer
+        shell: bash
         run: |
-          gh release create latest "dist/LeadFinder-Setup-${{ steps.version.outputs.version }}.exe" \
+          gh release create latest \
+            "dist/LeadFinder-Setup-${{ steps.version.outputs.version }}.exe" \
             --title "LeadFinder v${{ steps.version.outputs.version }}" \
             --notes "Windows: LeadFinder-Setup.exe herunterladen und doppelklicken. Mac: LeadFinder-mac.dmg herunterladen, oeffnen und in Programme ziehen." \
             --latest
