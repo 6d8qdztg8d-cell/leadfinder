@@ -52,10 +52,13 @@ targets:
 
           # node binary — copy once
           if [ ! -f "$RES/node" ]; then
-            NODE_BIN=$(command -v node || echo "")
+            NODE_BIN=""
+            if command -v node >/dev/null 2>&1; then
+              NODE_BIN=$(command -v node)
+            fi
             if [ -z "$NODE_BIN" ]; then
               for p in /opt/homebrew/bin/node /usr/local/bin/node /usr/bin/node; do
-                [ -f "$p" ] && NODE_BIN="$p" && break
+                if [ -f "$p" ]; then NODE_BIN="$p"; break; fi
               done
             fi
             if [ -n "$NODE_BIN" ]; then
@@ -64,18 +67,19 @@ targets:
             fi
           fi
 
-          # server.js + package.json — copy if changed
-          for f in server.js package.json; do
-            [ "$PROJ/$f" -nt "$RES/app/$f" ] && cp "$PROJ/$f" "$RES/app/"
-          done
+          # server files — always copy latest
+          cp "$PROJ/server.js"    "$RES/app/server.js"
+          cp "$PROJ/package.json" "$RES/app/package.json"
 
-          # src/ and public/ — fast incremental sync
-          rsync -a --delete "$PROJ/src/"    "$RES/app/src/"
-          rsync -a --delete "$PROJ/public/" "$RES/app/public/"
+          # src/ and public/ — fresh copy each build
+          rm -rf "$RES/app/src"
+          cp -r  "$PROJ/src"    "$RES/app/src"
+          rm -rf "$RES/app/public"
+          cp -r  "$PROJ/public" "$RES/app/public"
 
-          # node_modules — copy once (too large to sync every build)
+          # node_modules — copy once (too large to redo each build)
           if [ ! -d "$RES/app/node_modules" ]; then
-            cp -r "$PROJ/node_modules" "$RES/app/"
+            cp -r "$PROJ/node_modules" "$RES/app/node_modules"
           fi
 
     settings:
