@@ -3,5 +3,6 @@
   "installCommand": "",
   "buildCommand": "",
   "outputDirectory": "docs",
-  "framework": null
+  "framework": null,
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- docs/"
 }
