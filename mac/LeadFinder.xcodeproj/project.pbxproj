@@ -61,6 +61,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = BA3DE9C975F4926BB7F406EF /* Build configuration list for PBXNativeTarget "LeadFinder" */;
 			buildPhases = (
+				EE526679429220D4076F9F10 /* Copy Node.js + Server Files */,
 				B60D5E8786B08B4061AA48C8 /* Sources */,
 			);
 			buildRules = (
@@ -103,6 +104,28 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		EE526679429220D4076F9F10 /* Copy Node.js + Server Files */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Node.js + Server Files";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nPROJ=\"$SRCROOT/..\"\nRES=\"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/Resources\"\nmkdir -p \"$RES/app\"\n\n# node binary — copy once\nif [ ! -f \"$RES/node\" ]; then\n  NODE_BIN=$(command -v node || echo \"\")\n  if [ -z \"$NODE_BIN\" ]; then\n    for p in /opt/homebrew/bin/node /usr/local/bin/node /usr/bin/node; do\n      [ -f \"$p\" ] && NODE_BIN=\"$p\" && break\n    done\n  fi\n  if [ -n \"$NODE_BIN\" ]; then\n    cp \"$NODE_BIN\" \"$RES/node\"\n    chmod +x \"$RES/node\"\n  fi\nfi\n\n# server.js + package.json — copy if changed\nfor f in server.js package.json; do\n  [ \"$PROJ/$f\" -nt \"$RES/app/$f\" ] && cp \"$PROJ/$f\" \"$RES/app/\"\ndone\n\n# src/ and public/ — fast incremental sync\nrsync -a --delete \"$PROJ/src/\"    \"$RES/app/src/\"\nrsync -a --delete \"$PROJ/public/\" \"$RES/app/public/\"\n\n# node_modules — copy once (too large to sync every build)\nif [ ! -d \"$RES/app/node_modules\" ]; then\n  cp -r \"$PROJ/node_modules\" \"$RES/app/\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B60D5E8786B08B4061AA48C8 /* Sources */ = {

@@ -40,6 +40,43 @@ targets:
         LSMinimumSystemVersion: "13.0"
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
+    preBuildScripts:
+      - name: "Copy Node.js + Server Files"
+        basedOnDependencyAnalysis: false
+        script: |
+          set -e
+          PROJ="$SRCROOT/.."
+          RES="$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/Resources"
+          mkdir -p "$RES/app"
+
+          # node binary — copy once
+          if [ ! -f "$RES/node" ]; then
+            NODE_BIN=$(command -v node || echo "")
+            if [ -z "$NODE_BIN" ]; then
+              for p in /opt/homebrew/bin/node /usr/local/bin/node /usr/bin/node; do
+                [ -f "$p" ] && NODE_BIN="$p" && break
+              done
+            fi
+            if [ -n "$NODE_BIN" ]; then
+              cp "$NODE_BIN" "$RES/node"
+              chmod +x "$RES/node"
+            fi
+          fi
+
+          # server.js + package.json — copy if changed
+          for f in server.js package.json; do
+            [ "$PROJ/$f" -nt "$RES/app/$f" ] && cp "$PROJ/$f" "$RES/app/"
+          done
+
+          # src/ and public/ — fast incremental sync
+          rsync -a --delete "$PROJ/src/"    "$RES/app/src/"
+          rsync -a --delete "$PROJ/public/" "$RES/app/public/"
+
+          # node_modules — copy once (too large to sync every build)
+          if [ ! -d "$RES/app/node_modules" ]; then
+            cp -r "$PROJ/node_modules" "$RES/app/"
+          fi
+
     settings:
       base:
         PRODUCT_NAME: LeadFinder
