@@ -1,0 +1,46 @@
+name: LeadFinder
+options:
+  bundleIdPrefix: com.leadfinder
+  deploymentTarget:
+    macOS: "13.0"
+  xcodeVersion: "15"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_IDENTITY: ""
+    CODE_SIGNING_REQUIRED: NO
+    CODE_SIGNING_ALLOWED: NO
+
+targets:
+  LeadFinder:
+    type: application
+    platform: macOS
+    sources:
+      - path: LeadFinder/Sources
+        type: group
+    resources:
+      - path: LeadFinder/Resources
+        type: folder
+    info:
+      path: LeadFinder/Info.plist
+      properties:
+        CFBundleName: LeadFinder
+        CFBundleDisplayName: LeadFinder
+        CFBundleIdentifier: com.leadfinder.app
+        CFBundleVersion: "1"
+        CFBundleShortVersionString: "2.2.0"
+        CFBundleExecutable: "$(EXECUTABLE_NAME)"
+        CFBundlePackageType: APPL
+        NSPrincipalClass: NSApplication
+        NSHighResolutionCapable: true
+        LSMinimumSystemVersion: "13.0"
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_NAME: LeadFinder
+        PRODUCT_BUNDLE_IDENTIFIER: com.leadfinder.app

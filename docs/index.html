@@ -237,16 +237,27 @@
     dein perfekter Webdesign-Lead auf Knopfdruck.
   </p>
 
-  <a class="download-btn" id="dl-btn" href="https://github.com/6d8qdztg8d-cell/Leadsgenerator/releases/latest/download/LeadFinder-Setup.exe">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-      <polyline points="7 10 12 15 17 10"/>
-      <line x1="12" y1="15" x2="12" y2="3"/>
-    </svg>
-    Download für Windows
-  </a>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+    <a class="download-btn" id="dl-win" href="https://github.com/6d8qdztg8d-cell/Leadsgenerator/releases/latest/download/LeadFinder-Setup.exe">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Download für Windows
+    </a>
+    <a class="download-btn" id="dl-mac" href="https://github.com/6d8qdztg8d-cell/Leadsgenerator/releases/latest/download/LeadFinder-mac.dmg"
+       style="background:#1e1e1e;color:var(--accent);border:1.5px solid var(--accent);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Download für Mac
+    </a>
+  </div>
 
-  <p class="download-note">Kostenlos · Setup.exe · Installiert sich wie jede Windows-App</p>
+  <p class="download-note">Kostenlos · Windows: Setup.exe · Mac: DMG (Apple Silicon)</p>
 
   <div class="features">
     <div class="feature">
@@ -301,11 +312,14 @@
     fetch('https://api.github.com/repos/6d8qdztg8d-cell/Leadsgenerator/releases/latest')
       .then(r => r.json())
       .then(data => {
-        const asset = data.assets && data.assets[0];
-        if (asset) document.getElementById('dl-btn').href = asset.browser_download_url;
+        if (!data.assets) return;
+        data.assets.forEach(a => {
+          if (a.name.endsWith('.exe')) document.getElementById('dl-win').href = a.browser_download_url;
+          if (a.name.endsWith('.dmg')) document.getElementById('dl-mac').href = a.browser_download_url;
+        });
         if (data.name) {
           const note = document.querySelector('.download-note');
-          if (note) note.textContent = data.name + ' · Setup.exe · Installiert sich wie jede Windows-App';
+          if (note) note.textContent = data.name + ' · Windows: Setup.exe · Mac: DMG (Apple Silicon)';
         }
       }).catch(() => {});
   </script>

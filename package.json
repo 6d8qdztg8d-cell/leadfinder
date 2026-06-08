@@ -7,8 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "electron": "electron .",
-    "build": "electron-builder --win --x64",
-    "build:mac": "electron-builder --mac --arm64"
+    "build": "electron-builder --win --x64"
   },
   "dependencies": {
     "axios": "^1.6.2",
@@ -53,11 +52,6 @@
     "nsis": {
       "oneClick": true,
       "deleteAppDataOnUninstall": false
-    },
-    "mac": {
-      "target": [{ "target": "dmg", "arch": ["arm64"] }],
-      "artifactName": "LeadFinder-${version}-mac.dmg",
-      "identity": null
     },
     "dmg": {
       "title": "LeadFinder Installer"

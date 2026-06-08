@@ -56,7 +56,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-mac:
-    runs-on: macos-latest
+    runs-on: macos-14
     needs: build-windows
 
     steps:
@@ -68,25 +68,64 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install production dependencies
+        run: npm install --omit=dev --ignore-scripts
+
       - name: Fix Python distutils (Python 3.12+)
         run: pip3 install setuptools
 
-      - name: Install dependencies (skip native compile)
-        run: npm install --ignore-scripts
+      - name: Rebuild better-sqlite3 for arm64 (native Node)
+        run: npm rebuild better-sqlite3 --target_arch=arm64
 
-      - name: Rebuild native modules for Electron (arm64)
-        run: npx electron-rebuild --force --arch arm64
+      - name: Install xcodegen
+        run: brew install xcodegen
 
-      - name: Build Mac DMG
-        run: npm run build:mac
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Bundle app resources into Mac target
+        run: |
+          mkdir -p mac/LeadFinder/Resources/app/src
+          mkdir -p mac/LeadFinder/Resources/app/public
+          cp server.js mac/LeadFinder/Resources/app/
+          cp -r src/   mac/LeadFinder/Resources/app/src/
+          cp -r public/ mac/LeadFinder/Resources/app/public/
+          cp -r node_modules/ mac/LeadFinder/Resources/app/node_modules/
+          cp package.json mac/LeadFinder/Resources/app/
+          cp "$(which node)" mac/LeadFinder/Resources/node
+          chmod +x mac/LeadFinder/Resources/node
+
+      - name: Generate Xcode project
+        working-directory: mac
+        run: xcodegen generate
+
+      - name: Build app
+        working-directory: mac
+        run: |
+          xcodebuild \
+            -project LeadFinder.xcodeproj \
+            -scheme LeadFinder \
+            -configuration Release \
+            -archivePath build/LeadFinder.xcarchive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            archive
+
+      - name: Export .app from archive
+        run: |
+          cp -r mac/build/LeadFinder.xcarchive/Products/Applications/LeadFinder.app /tmp/LeadFinder.app
+
+      - name: Create DMG
+        run: |
+          hdiutil create \
+            -volname "LeadFinder" \
+            -srcfolder /tmp/LeadFinder.app \
+            -ov -format UDZO \
+            /tmp/LeadFinder-mac.dmg
 
       - name: Get version
         id: version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Upload Mac DMG to release
-        run: gh release upload latest "dist/LeadFinder-${{ steps.version.outputs.version }}-mac.dmg"
+        run: gh release upload latest "/tmp/LeadFinder-mac.dmg" --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
