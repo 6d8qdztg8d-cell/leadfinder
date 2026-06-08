@@ -20,8 +20,11 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Fix Python distutils (Python 3.12+)
+        run: pip install setuptools
+
+      - name: Install dependencies (skip native compile)
+        run: npm install --ignore-scripts
 
       - name: Rebuild native modules for Electron
         run: npx electron-rebuild --force
