@@ -1,4 +1,4 @@
-name: Build Windows Installer
+name: Build Installer (Windows + Mac)
 
 on:
   push:
@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
 
     steps:
@@ -46,7 +46,47 @@ jobs:
         id: version
         run: echo "version=$(node -p "require('./package.json').version")" >> $env:GITHUB_OUTPUT
 
-      - name: Create GitHub Release
-        run: gh release create latest "dist/LeadFinder-Setup-${{ steps.version.outputs.version }}.exe" --title "LeadFinder v${{ steps.version.outputs.version }}" --notes "Version ${{ steps.version.outputs.version }} — Installer herunterladen und doppelklicken. Überschreibt automatisch alte Versionen." --latest
+      - name: Create GitHub Release with Windows installer
+        run: |
+          gh release create latest "dist/LeadFinder-Setup-${{ steps.version.outputs.version }}.exe" \
+            --title "LeadFinder v${{ steps.version.outputs.version }}" \
+            --notes "Windows: LeadFinder-Setup.exe herunterladen und doppelklicken. Mac: LeadFinder-mac.dmg herunterladen, oeffnen und in Programme ziehen." \
+            --latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-mac:
+    runs-on: macos-latest
+    needs: build-windows
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Fix Python distutils (Python 3.12+)
+        run: pip3 install setuptools
+
+      - name: Install dependencies (skip native compile)
+        run: npm install --ignore-scripts
+
+      - name: Rebuild native modules for Electron (arm64)
+        run: npx electron-rebuild --force --arch arm64
+
+      - name: Build Mac DMG
+        run: npm run build:mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Upload Mac DMG to release
+        run: gh release upload latest "dist/LeadFinder-${{ steps.version.outputs.version }}-mac.dmg"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
